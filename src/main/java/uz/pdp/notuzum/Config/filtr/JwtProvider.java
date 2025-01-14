@@ -20,17 +20,18 @@ public class JwtProvider {
     @Value("${jwt.expire-timeout}")
     private Long expireTimeout;
 
-    public String generateToken(String username) {
+    public String generateToken(String username, String ipAddress, String userAgent) {
         Date date = new Date(System.currentTimeMillis() + expireTimeout);
         return Jwts
                 .builder()
                 .setIssuedAt(new Date())
                 .setSubject(username)
                 .setExpiration(date)
+                .claim("ip", ipAddress)
+                .claim("userAgent", userAgent)
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-
     public String getUsernameFromToken(String token) {
         Claims claims = getClaims(token);
         return claims.getSubject();
@@ -44,6 +45,8 @@ public class JwtProvider {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+
 
     public Key getKey() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(key));

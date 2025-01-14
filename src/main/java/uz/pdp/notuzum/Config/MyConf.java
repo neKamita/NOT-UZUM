@@ -1,54 +1,40 @@
 package uz.pdp.notuzum.Config;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.annotations.servers.Server;
 import uz.pdp.notuzum.Config.filtr.MyFilter;
+import uz.pdp.notuzum.Entity.User;
+import uz.pdp.notuzum.Repository.UserRepository;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
-@OpenAPIDefinition(
-        info = @Info(title = "Etadoor API", version = "1.1.2"),
-        servers = {
-                @Server(url = "https://etadoor.koyeb.app", description = "Production Server"),
-                @Server(url = "http://localhost:8080", description = "Local Development Server")
-        },
-        security = @SecurityRequirement(name = "bearerAuth")
-)
-@SecurityScheme(
-        name = "bearerAuth",
-        type = SecuritySchemeType.HTTP,
-        scheme = "bearer",
-        bearerFormat = "JWT"
-)
+@EnableMethodSecurity
 public class MyConf {
 
     @Autowired
     private final MyFilter myFilter;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public MyConf(MyFilter myFilter) {
         this.myFilter = myFilter;
@@ -57,20 +43,10 @@ public class MyConf {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/user/verify-seller").permitAll()
-                        .requestMatchers("/graphql/**", "/graphiql/**").permitAll()
-                        .requestMatchers("/subscriptions/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**"
-                        ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/doors/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/contacts/**").permitAll()
-                        .requestMatchers("/api/doors/**").hasAnyRole("ADMIN", "SELLER")
-                        .requestMatchers("/api/contacts/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(myFilter, UsernamePasswordAuthenticationFilter.class)
@@ -81,20 +57,9 @@ public class MyConf {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedOrigins(List.of("http://localhost:8080"));
-        config.setAllowCredentials(true);
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
-
-    @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
     }
@@ -102,5 +67,23 @@ public class MyConf {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public CommandLineRunner commandLineRunner() {
+        return args -> {
+            if (!userRepository.existsByUsername("defaultUser")) {
+                User user = new User();
+                user.setUsername("defaultUser");
+                user.setPassword(passwordEncoder().encode("defaultPassword"));
+                user.setEmail("defaultUser@example.com");
+                userRepository.save(user);
+            }
+        };
     }
 }

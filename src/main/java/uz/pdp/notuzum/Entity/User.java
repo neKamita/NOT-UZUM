@@ -21,6 +21,7 @@ public class User implements UserDetails {
     private Long id;
     private String name;
     private String surname;
+    private String username;
     private String role;
     private String phoneNumber;
     private String password;
@@ -37,7 +38,11 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return name;
+        return username;
     }
 
+    @Override
+    public String getPassword() {
+        return password;
+    }
 }
