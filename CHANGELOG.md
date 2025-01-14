@@ -34,27 +34,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Example: Patched XSS vulnerability in forms
 ```
 
-## [Unreleased]
+## [1.0.1] - 2024-01-14
 
 ### Added
-- Initial project setup
-- Basic authentication system
-- Product management features
-- Shopping cart functionality
-- Order management system
-- Database integration (PostgreSQL & MongoDB)
-- RESTful API endpoints
-- Docker configuration
-- Basic documentation
+- Added `Shop` entity class
+- Added `Delivery_Address` entity class
+- Added `Track` entity class
+- Added `OrderStatus` enum class
+- Added `PaymentMethod` enum class
+- Added `User` entity class
+- Added `Category` entity class
+- Added `Addititons` entity class
+- Added `Sub_Product` entity class
+- Added `Product` entity class
+- Added `Attachment` entity class
+- Added `Rate` entity class
+- Added `Branch` entity class
+- Added `Basket` entity class
+- Added `Review` entity class
+- Added `Delivery` enum class
+- Added `Color` enum class
+- Added `Basket_Selected_Prooduct` entity class
+- Added `History` entity class
+- Added `Favourite_items` entity class
+- Added `Selected_Product` entity class
 
 ### Changed
-- Updated to Spring Boot 3.4.1
-- Migrated to Java 21
+- Updated project documentation to include new entity classes
+- Enhanced `Config` folder and its files, including `JwtProvider`, `MyConf`, and `MyFilter` classes
 
-### Fixed
-- Initial bug fixes and improvements
-
-## [0.1.0] - 2024-01-20
+[1.0.1]: https://github.com/yourusername/not-uzum/releases/tag/v1.0.1
+## [0.1.0] - 2024-01-13
 
 ### Added
 - Project initialization
